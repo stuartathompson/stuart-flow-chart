@@ -1,0 +1,14 @@
+{
+  "name": "ab7cd1ccb3f4caf6",
+  "main": "ab7cd1ccb3f4caf6@458.js",
+  "version": "458.0.0",
+  "homepage": "https://observablehq.com/d/ab7cd1ccb3f4caf6",
+  "author": {
+    "name": "Stuart Thompson",
+    "url": "https://observablehq.com/@stuartathompson"
+  },
+  "type": "module",
+  "peerDependencies": {
+    "@observablehq/runtime": "4"
+  }
+}
