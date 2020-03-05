@@ -57,7 +57,7 @@ text{
 
 
 .connector{
-  stroke: #f00;
-  opacity: .5;
+  stroke: #000;
+  opacity: .1;
   fill: none;
 }
