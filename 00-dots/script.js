@@ -247,7 +247,7 @@ var paths = [
     x: [4.5, 4],
     y: [3.5, 4.5],
     v: 2454,
-    o: [-cellWidth(6457 / 2) + cellWidth(2454 / 2), 0],
+    o: [-cellWidth(6457/2)+cellWidth(2454/2), 0],
     tie: "Investigation-Investigation completed"
   },
   {
@@ -347,7 +347,14 @@ var data = d3.range(200)
 
 var cellHeight = 15
 c.x.domain([0, 5])
-c.y.domain([8.5, 0])
+c.y.domain([8.5, 0]) 
+
+var connectorCurvedPaths = []
+var widths = []
+paths.forEach(calcPath)
+
+var pathSel = c.svg.appendMany('path.connector', paths)
+  .at({d: d => d.path, strokeWidth: d => d.width})
 
 var rowSel = c.svg.appendMany('g.row', outline)
   .translate(d => c.y(d.y), 1)
@@ -365,12 +372,11 @@ nodeSel.append('rect')
 nodeSel.append('text')
   .text(d => d.label)
   .at({textAnchor: 'middle', fontSize: 12, y: -5})
- 
 
-var connectorCurvedPaths = []
-var widths = []
-for(var d of paths){
-  var i = 0;
+
+
+
+function calcPath(d, i){
   // Starting point
   var pStartx = c.x(d.x[0]) + d.o[0]
   var pStarty = c.y(d.y[0]) + cellHeight
@@ -397,39 +403,27 @@ for(var d of paths){
   var pControl2x = pEndx
   var pControl2y = mid[1]
 
-  var path = `M ${pStartx},${pStarty} C ${pStartCurvex}, ${pStartCurvey}, ${pEndCurvex}, ${pEndCurvey}, ${pEndx}, ${pEndy}`
+  d.path = `M ${pStartx},${pStarty} C ${pStartCurvex}, ${pStartCurvey}, ${pEndCurvex}, ${pEndCurvey}, ${pEndx}, ${pEndy}`
+  d.width = cellWidth(d.v)
 
-  connectorCurvedPaths.push({
-   path: path,
-   tie: d.tie
- })
 
- widths.push(cellWidth(d.v))
- i++
+  function getMidpoint(p1, p2){
+   var x1 = p1[0],
+       y1 = p1[1],
+       x2 = p2[0],
+       y2 = p2[1]
+
+  return [(x1+x2)/2, (y1+y2)/2]
+  }
+
+  function getDistanceBetweenPoints(p1, p2){
+   var a = p1[0] - p2[0];
+   var b = p1[1] - p2[1];
+
+   return Math.sqrt( a*a + b*b );
+  }
+
 }
-
-
-var pathSel = c.svg.appendMany('path.connector', connectorCurvedPaths)
-  .at({d: d => d.path,strokeWidth: (d, i) => widths[i]})
-
-
-function getMidpoint(p1, p2){
-  var x1 = p1[0],
-      y1 = p1[1],
-      x2 = p2[0],
-      y2 = p2[1]
-
- return [(x1+x2)/2, (y1+y2)/2]
-}
-
-
-function getDistanceBetweenPoints(p1, p2){
-  var a = p1[0] - p2[0];
-  var b = p1[1] - p2[1];
-
-  return Math.sqrt( a*a + b*b );
-}
-
 
 // function getAngledLineFromPoints(p1, p2, distance, pCenter, perp){
 //   var x1 = p1[0],
