@@ -386,7 +386,7 @@ paths.forEach(d => {
 
 var points = d3.range(4966).map(i => {
   var speed = (Math.random() + .5)/240
-  var wait = -Math.random()*50
+  var wait = -Math.random()*100
   var xOffset = Math.random() - .5
   var y = 0
 
@@ -404,6 +404,8 @@ var points = d3.range(4966).map(i => {
 
   return rv
 })
+// points = [points[0]]
+// points[0].wait = .5
 
 var cellHeight = 15
 c.x.domain([0, 5])
@@ -419,7 +421,7 @@ var pathSel = c.svg.appendMany('path.connector', paths)
     var length = this.getTotalLength()
     var pctCache = {}
     d.calcPos = pct => {
-      pct = Math.round(pct*100)/100
+      pct = d3.clamp(0, Math.round(pct*100)/100, 1)
       if (pctCache[pct]) return pctCache[pct]
 
       return pctCache[pct] = this.getPointAtLength(pct*length)
@@ -437,7 +439,7 @@ nodeSel.append('rect')
     x: d => -cellWidth(d.value/2),
     width: d => cellWidth(d.value),
     height: cellHeight,
-    fillOpacity: d => d.label == 'Rape kit test' ? 1 : 0 
+    fillOpacity: d => d.label == 'Rape kit test' || !d.connectors ? 1 : 0 
   })
 
 
@@ -455,11 +457,34 @@ window.__dottimer = d3.timer(t => {
     var t = tickIndex*d.speed + d.wait
     if (t < 0 || t > d.paths.length) return
 
-    var path = d.paths[Math.floor(t)]
+    var x, y
 
-    var pos = path.calcPos(t % 1)
+    var path = d.paths[Math.floor(t)]
+    var remainder = t % 1
+
+    var pathpct = .9
+    d.pos = path.calcPos(Math.min(.9999, remainder*1/pathpct) % 1)
+    x = d.pos.x + d.xOffset*path.width
+    y = d.pos.y
+
+    // interpolate between paths while in box
+    // could also draw another hidden path here
+    // need to configure to allow staying in investigation and disposition longer
+    if (remainder > pathpct){
+      var nextPath = d.paths[Math.floor(t + 1)]
+      if (!nextPath) return 
+
+      // could get this from pStartx // pStarty too
+      var nextPos = nextPath.calcPos(0)
+      var s = (remainder - pathpct)/(1 - pathpct)
+      x = lerp(x, nextPos.x + d.xOffset*nextPath.width, s)
+      y = lerp(y, nextPos.y, s)
+    } 
+
     ctx.beginPath()
-    ctx.arc(pos.x + d.xOffset*path.width, pos.y, 3, 0, 2*Math.PI)
+    ctx.arc(x, y, 3, 0, 2*Math.PI)
+    ctx.strokeStyle = '#fff'
+    ctx.fillStyle = '#000'
     ctx.fill()
     ctx.stroke()
   })
@@ -520,6 +545,14 @@ function calcPath(d, i){
   }
 
 }
+
+
+
+  
+function lerp(a, b, t) {
+  return a*(1-t)+b*t
+}
+
 
 // function getAngledLineFromPoints(p1, p2, distance, pCenter, perp){
 //   var x1 = p1[0],
